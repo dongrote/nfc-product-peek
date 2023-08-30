@@ -17,23 +17,33 @@
         <CollectionView.ItemTemplate>
             <DataTemplate x:DataType="model:SmartCard">
                     <Frame>
-                        <VerticalStackLayout>
+                        <VerticalStackLayout Spacing="10">
                             <Label Text="{Binding ReaderName, StringFormat='Reader: {0}'}"
                                     FontSize="Large"/>
                             <Label Text="{Binding SerialNumberHexString, StringFormat='Serial Number: {0}'}"
                                     FontSize="Subtitle"/>
-                            <Label Text="Current data:"/>
-                            <Entry IsEnabled="False" Text="{Binding UserData}"/>
-                            <Entry MaxLength="540" Text="{Binding UserDataWriteRequest, Mode=TwoWay}"/>
-                        <Grid ColumnDefinitions="*,*">
-                            <Button Grid.Column="0"
-                                    Text="Write to SmartCard"
-                                    Command="{Binding WriteUserDataCommand}"/>
-                            <Button Grid.Column="1"
-                                    Text="Refresh SmartCard UserData"
-                                    Command="{Binding RefreshUserDataCommand}"/>
-                        </Grid>
-                        </VerticalStackLayout>
+                        <Frame Padding="10" CornerRadius="10">
+                            <VerticalStackLayout>
+                                <Label Text="Current data:" FontSize="Subtitle"/>
+                                <Entry IsReadOnly="True" Text="{Binding UserData}"/>
+                            </VerticalStackLayout>
+                        </Frame>
+                        <Frame Padding="10" CornerRadius="10">
+                            <VerticalStackLayout>
+                            <Entry
+                                MaxLength="540"
+                                Text="{Binding UserDataWriteRequest, Mode=TwoWay}"/>
+                            <Grid ColumnDefinitions="*,*">
+                                <Button Grid.Column="0"
+                                        Text="Write to SmartCard"
+                                        Command="{Binding WriteUserDataCommand}"/>
+                                <Button Grid.Column="1"
+                                        Text="Refresh SmartCard UserData"
+                                        Command="{Binding RefreshUserDataCommand}"/>
+                            </Grid>
+                            </VerticalStackLayout>
+                        </Frame>
+                    </VerticalStackLayout>
                     </Frame>
             </DataTemplate>
         </CollectionView.ItemTemplate>

@@ -31,7 +31,6 @@ public partial class SmartCard : ObservableObject
     [RelayCommand]
     void WriteUserData()
     {
-        Debug.WriteLine(nameof(WriteUserData));
         WriteUserData(ReaderName, UserDataWriteRequest);
         RefreshUserData();
     }
@@ -39,7 +38,6 @@ public partial class SmartCard : ObservableObject
     [RelayCommand]
     void RefreshUserData()
     {
-        Debug.WriteLine(nameof(RefreshUserData));
         UserData = Encoding.UTF8.GetString(ReadUserData(ReaderName));
     }
 
@@ -48,9 +46,9 @@ public partial class SmartCard : ObservableObject
         List<byte> userData = new();
         using var ctx = contextFactory.Establish(SCardScope.System);
         using var reader = ctx.ConnectReader(readerName, SCardShareMode.Shared, SCardProtocol.Any);
-        for (ushort block = 4; block < (540 / 4); block++)
+        for (byte block = 4; block < (540 / 4); block++)
         {
-            var bytes = ReadBytes(reader, block);
+            var bytes = ReadBytes(reader, block, 4);
             foreach (var b in bytes)
             {
                 if (b == 0) return userData.ToArray();
@@ -61,7 +59,7 @@ public partial class SmartCard : ObservableObject
         return userData.ToArray();
     }
 
-    private byte[] ReadBytes(ICardReader reader, ushort blockNumber, byte rxCount = 0x10)
+    private byte[] ReadBytes(ICardReader reader, byte blockNumber, byte rxCount = 0x10)
     {
         const byte maxReadCount = 0x10;
         var cappedRxCount = Math.Min(rxCount, maxReadCount);
@@ -72,8 +70,8 @@ public partial class SmartCard : ObservableObject
             {
                 0xff, // read class
                 0xb0, // instruction
-                (byte)((blockNumber >> 8) & 0xff), // block num (P1)
-                (byte)(blockNumber & 0xff), // block num (P2)
+                0x00, // block num (P1)
+                blockNumber, // block num (P2)
                 cappedRxCount, // number of bytes to read (max 16)
             };
 
@@ -107,7 +105,6 @@ public partial class SmartCard : ObservableObject
             {
                 List<byte> packet = new();
                 var slice = bytes.Take(new Range(i * blockSize, (i + 1) * blockSize)).ToArray();
-                Debug.WriteLine($"Write: '{Encoding.UTF8.GetString(slice)}'");
                 var apduBytes = new byte[]
                 {
                     0xff,
@@ -126,8 +123,13 @@ public partial class SmartCard : ObservableObject
                     throw new Exception("Write failed.");
                 }
 
-                Debug.WriteLine($"Write Status Code: 0x{Convert.ToHexString(rx)}");
+                var statusCode = Convert.ToUInt16((rx[0] << 8) | rx[1]);
+                if (statusCode != 0x9000)
+                {
+                    throw new Exception($"Write failed; status code 0x{statusCode.ToString("X")}");
+                }
 
+                Debug.WriteLine($"Status Code 0x{statusCode.ToString("X")}");
             }
             catch (Exception ex)
             {

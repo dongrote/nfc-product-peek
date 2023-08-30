@@ -76,7 +76,7 @@ public partial class MainPageViewModel : ObservableObject, IDisposable
         using var reader = ctx.ConnectReader(readerName, SCardShareMode.Shared, SCardProtocol.Any);
         for (ushort block = 4; block < (540 / 4); block++)
         {
-            var bytes = ReadBytes(reader, block);
+            var bytes = ReadBytes(reader, block, 4);
             foreach (var b in bytes)
             {
                 if (b == 0) return userData.ToArray();
